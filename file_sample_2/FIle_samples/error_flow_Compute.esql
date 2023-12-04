@@ -1,0 +1,55 @@
+
+
+CREATE COMPUTE MODULE error_flow_Compute
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+
+
+		DECLARE label INTEGER 1;
+		DECLARE count INTEGER;
+		Declare servicename character;
+		SET count = CARDINALITY(InputLocalEnvironment.HTTP.Input.Path.Segment[]);
+		WHILE label <= count DO
+			SET servicename = InputLocalEnvironment.HTTP.Input.Path.Segment[label];
+			SET label = label + 1;
+		END WHILE;
+		 
+		declare ExpList reference to InputRoot.*[1];	
+		MOVE ExpList TO InputExceptionList.*[<];
+		   WHILE lastmove(ExpList) DO
+                 IF ExpList.Number is not null THEN
+                     -- SET OutputRoot.XMLNSC.Error.Label  		= 	ExpList."Label";
+					  SET OutputRoot.XMLNSC.Error.serviceName 	=	MessageFlowLabel;
+					  SET OutputRoot.XMLNSC.Error.Function 		=	ExpList.Function;
+                      SET OutputRoot.XMLNSC.Error.Text  		= 	ExpList.Text;
+                      SET OutputRoot.XMLNSC.Error.Catalog 		= 	ExpList.Catalog;
+                      SET OutputRoot.XMLNSC.Error.Number 		= 	ExpList.Number;
+                      SET OutputRoot.XMLNSC.Error.InsertText1 	= 	ExpList.Insert[1].Text;
+                      SET OutputRoot.XMLNSC.Error.InsertText2 	= 	ExpList.Insert[2].Text;
+                      SET OutputRoot.XMLNSC.Error.InsertText3 	= 	ExpList.Insert[3].Text;
+                      SET OutputRoot.XMLNSC.Error.InsertText4 	= 	ExpList.Insert[4].Text;
+                      SET OutputRoot.XMLNSC.Error.InsertText5 	= 	ExpList.Insert[5].Text;
+                      SET OutputRoot.XMLNSC.Error.InsertText6 	= 	ExpList.Insert[6].Text;
+                      SET OutputRoot.XMLNSC.Error.InsertText7 	= 	ExpList.Insert[7].Text;                   
+                 END IF;
+                 move ExpList lastchild;     
+           END WHILE;
+
+
+		RETURN TRUE;
+	END;
+
+	CREATE PROCEDURE CopyMessageHeaders() BEGIN
+		DECLARE I INTEGER 1;
+		DECLARE J INTEGER;
+		SET J = CARDINALITY(InputRoot.*[]);
+		WHILE I < J DO
+			SET OutputRoot.*[I] = InputRoot.*[I];
+			SET I = I + 1;
+		END WHILE;
+	END;
+
+	CREATE PROCEDURE CopyEntireMessage() BEGIN
+		SET OutputRoot = InputRoot;
+	END;
+END MODULE;
